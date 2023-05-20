@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import * as ImagePicker from 'expo-image-picker';
 import { baseUrl } from '../shared/baseUrl';
 import logo from '../assets/images/logo.png';
+import * as ImageManipulator from 'expo-image-manipulator'; // task1, step1 - import ImageManipulator API
 
 const LoginTab = ({ navigation }) => {
     const [username, setUsername] = useState('');
@@ -16,21 +17,22 @@ const LoginTab = ({ navigation }) => {
         console.log('username:', username);
         console.log('password:', password);
         console.log('remember:', remember);
-        if (remember) {
+
+        if (remember){
             SecureStore.setItemAsync(
                 'userinfo',
                 JSON.stringify({
                     username,
                     password
                 })
-            ).catch((error) => console.log('Could not save user info', error));
+            ).catch((error) => console.log('Could not delete user info', error))
         } else {
             SecureStore.deleteItemAsync('userinfo').catch((error) =>
-                console.log('Could not delete user info', error)
-            );
+                console.log('Could not delete user info')
+            )
         }
     };
-
+    
     useEffect(() => {
         SecureStore.getItemAsync('userinfo').then((userdata) => {
             const userinfo = JSON.parse(userdata);
@@ -43,7 +45,9 @@ const LoginTab = ({ navigation }) => {
     }, []);
 
     return (
-        <View style={styles.container}>
+        <View
+            style={styles.container}
+        >
             <Input
                 placeholder='Username'
                 leftIcon={{ type: 'font-awesome', name: 'user-o' }}
@@ -67,7 +71,9 @@ const LoginTab = ({ navigation }) => {
                 onPress={() => setRemember(!remember)}
                 containerStyle={styles.formCheckbox}
             />
-            <View style={styles.formButton}>
+            <View
+                style={styles.formButton}
+            >
                 <Button
                     onPress={() => handleLogin()}
                     title='Login'
@@ -80,10 +86,12 @@ const LoginTab = ({ navigation }) => {
                             iconStyle={{ marginRight: 10 }}
                         />
                     }
-                    buttonStyle={{ backgroundColor: '#5637DD' }}
+                    buttonStyle= {{ backgroundColor: '#5637DD' }}
                 />
             </View>
-            <View style={styles.formButton}>
+            <View
+                style={styles.formButton}
+            >
                 <Button
                     onPress={() => navigation.navigate('Register')}
                     title='Register'
@@ -96,7 +104,7 @@ const LoginTab = ({ navigation }) => {
                             iconStyle={{ marginRight: 10 }}
                         />
                     }
-                    titleStyle={{ color: 'blue' }}
+                    titleStyle= {{ color: 'blue' }}
                 />
             </View>
         </View>
@@ -122,24 +130,24 @@ const RegisterTab = () => {
             remember
         };
         console.log(JSON.stringify(userInfo));
-        if (remember) {
+
+        if (remember){
             SecureStore.setItemAsync(
                 'userinfo',
                 JSON.stringify({
                     username,
                     password
                 })
-            ).catch((error) => console.log('Could not save user info', error));
+            ).catch((error) => console.log('Could not delete user info', error))
         } else {
             SecureStore.deleteItemAsync('userinfo').catch((error) =>
-                console.log('Could not delete user info', error)
+                console.log('Could not delete user info')
             );
         }
     };
 
     const getImageFromCamera = async () => {
-        const cameraPermission =
-            await ImagePicker.requestCameraPermissionsAsync();
+        const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
 
         if (cameraPermission.status === 'granted') {
             const capturedImage = await ImagePicker.launchCameraAsync({
@@ -148,21 +156,47 @@ const RegisterTab = () => {
             });
             if (capturedImage.assets) {
                 console.log(capturedImage.assets[0]);
-                setImageUrl(capturedImage.assets[0].uri);
+                processImage(capturedImage.assets[0].uri); // task 1, step 6 - call the processedImage function
             }
         }
     };
 
+    const processImage = async (imgUri) => { // task 1, step 2 - create processImage async function
+        const processedImage = await ImageManipulator.manipulateAsync( // task 1, step 3 - create a new image
+            imgUri,
+            [{ resize: { width: 400 } }], { format: 'png' }
+        );
+        console.log(processedImage) // task 1, step 4 - log new image details to console
+        setImageUrl(processedImage.uri) // task 1, step 5 - update imageUrl state
+    };
+
+    const getImageFromGallery = async () => { // task 2, step 2 - create async function
+        const mediaLibraryPermissions = await ImagePicker.requestCameraPermissionsAsync();
+
+        if (mediaLibraryPermissions.status === 'granted') { // task 2, step 3 - ask permission to access the media library
+            const capturedImage = await ImagePicker.launchImageLibraryAsync({ // task 2, step 4 - open the image gallery
+                allowsEditing: true,
+                aspect: [1, 1]
+            });
+            if (capturedImage.assets) { // task 2, step 5 - log to the console and process the image
+                console.log(capturedImage.assets[0]);
+                processImage(capturedImage.assets[0].uri)
+            }
+        }
+    };
+
+    // task 2, step 1 (line 199) - add Gallery button
     return (
-        <ScrollView>
+        <ScrollView> 
             <View style={styles.container}>
                 <View style={styles.imageContainer}>
                     <Image
                         source={{ uri: imageUrl }}
                         loadingIndicatorSource={logo}
                         style={styles.image}
-                    />
+                    /> 
                     <Button title='Camera' onPress={getImageFromCamera} />
+                    <Button title='Gallery' onPress={getImageFromGallery} />
                 </View>
                 <Input
                     placeholder='Username'
@@ -211,7 +245,9 @@ const RegisterTab = () => {
                     onPress={() => setRemember(!remember)}
                     containerStyle={styles.formCheckbox}
                 />
-                <View style={styles.formButton}>
+                <View
+                    style={styles.formButton}
+                >
                     <Button
                         onPress={() => handleRegister()}
                         title='Register'
@@ -224,12 +260,12 @@ const RegisterTab = () => {
                                 iconStyle={{ marginRight: 10 }}
                             />
                         }
-                        buttonStyle={{ backgroundColor: '#5637DD' }}
+                        buttonStyle= {{ backgroundColor: '#5637DD' }}
                     />
                 </View>
             </View>
         </ScrollView>
-    );
+    )
 };
 
 const Tab = createBottomTabNavigator();
@@ -276,7 +312,7 @@ const LoginScreen = () => {
                 }}
             />
         </Tab.Navigator>
-    );
+    )
 };
 
 const styles = StyleSheet.create({
